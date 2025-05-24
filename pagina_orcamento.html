@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Criar Orçamento</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #ffffff;
+      margin-top: 40px;
+      padding: 30px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 15px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .output {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    canvas {
+      margin-top: 30px;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .container, .output {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      form, button, canvas {
+        display: none !important;
+      }
+
+      .output {
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Criar Orçamento</h1>
+
+  <form id="orcamentoForm">
+    <label for="usuario">Selecionar Usuário:</label>
+    <select id="usuario" required>
+      <option value="">-- Selecione um usuário --</option>
+      <option value="João Silva">João Silva</option>
+      <option value="Maria Costa">Maria Costa</option>
+      <option value="Ana Souza">Ana Souza</option>
+    </select>
+
+    <label for="nome">Nome do Orçamento:</label>
+    <input type="text" id="nome" required>
+
+    <label for="descricao">Descrição:</label>
+    <textarea id="descricao" rows="3"></textarea>
+
+    <label for="data">Data:</label>
+    <input type="date" id="data" required>
+
+    <label for="valor">Valor Total (R$):</label>
+    <input type="number" id="valor" required>
+
+    <button type="submit">💾 Salvar Orçamento</button>
+  </form>
+
+  <button onclick="exportarJSON()">📁 Exportar Orçamentos (.json)</button>
+  <button onclick="window.print()">🖨️ Imprimir Orçamentos</button>
+
+  <div class="output" id="saida"></div>
+
+  <canvas id="grafico" width="400" height="200"></canvas>
+</div>
+
+<script>
+  const form = document.getElementById("orcamentoForm");
+  const saida = document.getElementById("saida");
+  const graficoEl = document.getElementById("grafico");
+
+  let orcamentos = JSON.parse(localStorage.getItem("orcamentos")) || [];
+
+  mostrarOrcamentos();
+  desenharGrafico();
+
+  form.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const usuario = document.getElementById("usuario").value;
+    const nome = document.getElementById("nome").value;
+    const descricao = document.getElementById("descricao").value;
+    const data = document.getElementById("data").value;
+    const valor = parseFloat(document.getElementById("valor").value);
+
+    if (!usuario) {
+      alert("Por favor, selecione um usuário.");
+      return;
+    }
+
+    const novoOrcamento = { usuario, nome, descricao, data, valor };
+    orcamentos.push(novoOrcamento);
+    localStorage.setItem("orcamentos", JSON.stringify(orcamentos));
+
+    mostrarOrcamentos();
+    desenharGrafico();
+    form.reset();
+  });
+
+  function mostrarOrcamentos() {
+    if (orcamentos.length === 0) {
+      saida.innerHTML = "<p>Nenhum orçamento salvo ainda.</p>";
+      return;
+    }
+
+    saida.innerHTML = "<h3>Orçamentos Salvos:</h3>" + orcamentos.map((o, index) => `
+      <p><strong>${index + 1}.</strong> Usuário: ${o.usuario} | Nome: ${o.nome} | Data: ${o.data} | Valor: R$ ${o.valor.toFixed(2)}</p>
+      <p><em>${o.descricao}</em></p>
+      <hr>
+    `).join("");
+  }
+
+  function exportarJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(orcamentos, null, 2));
+    const link = document.createElement('a');
+    link.setAttribute("href", dataStr);
+    link.setAttribute("download", "orcamentos.json");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  function desenharGrafico() {
+    if (window.graficoInstance) {
+      window.graficoInstance.destroy();
+    }
+
+    const somaPorUsuario = {};
+
+    orcamentos.forEach(o => {
+      if (!somaPorUsuario[o.usuario]) {
+        somaPorUsuario[o.usuario] = 0;
+      }
+      somaPorUsuario[o.usuario] += o.valor;
+    });
+
+    const labels = Object.keys(somaPorUsuario);
+    const valores = Object.values(somaPorUsuario);
+
+    const ctx = graficoEl.getContext("2d");
+    window.graficoInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Total por Usuário (R$)',
+          data: valores,
+          backgroundColor: '#4CAF50'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: value => `R$ ${value}`
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
