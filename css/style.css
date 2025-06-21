@@ -1,0 +1,68 @@
+
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    background-color: #f0f2f5; 
+    color: #333;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.6rem;
+}
+
+.nav-tabs .nav-link {
+    color: #007bff; 
+    font-weight: 500;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    background-color: #e9ecef;
+    border-color: #dee2e6 #dee2e6 #dee2e6;
+    color: #0056b3;
+}
+
+.card {
+    border-radius: 0.75rem;
+    border: none;
+}
+
+.card-title {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.table thead th {
+    background-color: #007bff;
+    color: white;
+    border-bottom: 2px solid #0056b3;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 123, 255, 0.05); 
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+footer {
+    background-color: #212529; /* Darker than navbar for distinction */
+}
